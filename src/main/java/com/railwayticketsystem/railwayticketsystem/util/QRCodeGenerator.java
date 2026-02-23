@@ -13,8 +13,12 @@ import java.nio.file.Paths;
 
 @Component
 public class QRCodeGenerator {
+
+    private static final String TICKETS_DIR = "./tickets/";
+
     public String generateQR(Booking booking) throws Exception {
-        String data = String.format("%s|%s|%s to %s|%s %s|%s",
+        // QR Data as per requirement: Name|NIC|Route|Date & Time|TransactionID
+        String qrData = String.format("%s|%s|%s → %s|%s %s|%s",
                 booking.getUser().getFullName(),
                 booking.getUser().getNic(),
                 booking.getTrain().getStartStation().getStationName(),
@@ -24,13 +28,16 @@ public class QRCodeGenerator {
                 booking.getTransactionId());
 
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, 300, 300);
+        BitMatrix bitMatrix = qrCodeWriter.encode(qrData, BarcodeFormat.QR_CODE, 300, 300);
 
-        String qrFileName = "QR-" + booking.getTransactionId() + ".png";
-        Path path = Paths.get("tickets/" + qrFileName);
-        Files.createDirectories(path.getParent());
-        MatrixToImageWriter.writeToPath(bitMatrix, "PNG", path);
+        String fileName = "QR-" + booking.getTransactionId() + ".png";
+        Path qrPath = Paths.get(TICKETS_DIR + fileName);
 
-        return path.toString();
+        // Create directory if not exists
+        Files.createDirectories(qrPath.getParent());
+
+        MatrixToImageWriter.writeToPath(bitMatrix, "PNG", qrPath);
+
+        return qrPath.toAbsolutePath().toString();
     }
 }
