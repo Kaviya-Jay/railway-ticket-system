@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!-- ====================== NAVBAR FRAGMENT ====================== -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+
+        <!-- Logo -->
+        <a class="navbar-brand fw-bold fs-4" href="/">
+            🚄 Sri Lanka Railways
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+
+                <!-- Always visible -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+
+                <!-- Visible only to logged-in users -->
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/search">Search Trains</a>
+                </li>
+
+                <!-- Admin Menu -->
+                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        Admin Panel
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin/dashboard">Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/admin/stations">Manage Stations</a></li>
+                        <li><a class="dropdown-item" href="/admin/trains">Manage Trains</a></li>
+                        <li><a class="dropdown-item" href="/admin/reports">Transaction Reports</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <!-- Right side: Auth Links -->
+            <ul class="navbar-nav">
+                <!-- Logged in user -->
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/dashboard">
+                        Welcome, <span th:text="${#authentication.name}" sec:authorize="isAuthenticated()"></span>
+                    </a>
+                </li>
+
+                <!-- Login / Register (Anonymous only) -->
+                <li class="nav-item" sec:authorize="isAnonymous()">
+                    <a class="nav-link" href="/login">Login</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAnonymous()">
+                    <a class="nav-link" href="/register">Register</a>
+                </li>
+
+                <!-- Logout -->
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link text-danger" href="/logout">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+</html>
