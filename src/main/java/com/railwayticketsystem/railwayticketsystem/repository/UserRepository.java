@@ -13,5 +13,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByNic(String nic);
 
-    Optional<User> findByEmail(String email);   // useful for future extensions
+    Optional<User> findByEmail(String email);
+
+    boolean existsByEmail(String email);  // Added for registration check
 }
