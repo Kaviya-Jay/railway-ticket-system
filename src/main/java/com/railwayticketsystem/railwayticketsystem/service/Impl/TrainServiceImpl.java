@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,5 +30,10 @@ public class TrainServiceImpl implements TrainService {
     @Override
     public Train saveTrain(Train train) {
         return trainRepository.save(train);
+    }
+
+    @Override
+    public Optional<Train> findById(Long id) {
+        return trainRepository.findById(id);
     }
 }

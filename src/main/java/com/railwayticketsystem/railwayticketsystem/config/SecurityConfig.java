@@ -1,8 +1,10 @@
 package com.railwayticketsystem.railwayticketsystem.config;
 
 import com.railwayticketsystem.railwayticketsystem.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,55 +15,53 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final UserRepository userRepository;
 
-    public SecurityConfig(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Public pages
-                        .requestMatchers("/", "/register", "/login", "/css/**", "/js/**", "/images/**").permitAll()
+                        // 1. PUBLIC ACCESS
+                        .requestMatchers("/", "/index", "/search", "/search/**", "/error").permitAll()
+                        .requestMatchers("/login", "/register", "/logout", "/otp-verify").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/tickets/**").permitAll()
 
-                        // Allow direct access to generated tickets & QR codes
-                        .requestMatchers("/tickets/**").permitAll()
-
-                        // Admin only
+                        // 2. ROLE-BASED ACCESS
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
-                        // All other endpoints require login
+                        // 3. AUTHENTICATED ACCESS
+                        .requestMatchers("/booking/**", "/book", "/dashboard", "/payment/**").authenticated()
+
+                        // 4. CATCH-ALL
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", true)   // redirects to user or admin dashboard
+                        .defaultSuccessUrl("/dashboard", false) // false මගින් කලින් හිටපු පිටුවටම redirect කරයි
+                        .failureUrl("/login?error=true")
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/login")
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
 
         return http.build();
     }
 
-    /**
-     * Custom UserDetailsService - Uses NIC as username
-     */
     @Bean
     public UserDetailsService userDetailsService() {
+        // මෙතන කලින් තිබුණේ findByEmail - දැන් එය findByNic ලෙස නිවැරදි කර ඇත
         return username -> userRepository.findByNic(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with NIC: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 
-    /**
-     * BCrypt Password Encoder (strength 12)
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);

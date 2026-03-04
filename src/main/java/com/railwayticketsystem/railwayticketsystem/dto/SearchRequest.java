@@ -1,15 +1,12 @@
 package com.railwayticketsystem.railwayticketsystem.dto;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
-/**
- * DTO for Train Search Request
- * Used in SearchController for clean binding
- */
 @Data
 public class SearchRequest {
 
@@ -19,7 +16,8 @@ public class SearchRequest {
     @NotNull(message = "End station is required")
     private Long endStationId;
 
-    @NotNull(message = "Journey date is required")
+    @NotNull(message = "Please select a journey date")
+    @Future(message = "Journey date must be from tomorrow onwards")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate journeyDate;
 }

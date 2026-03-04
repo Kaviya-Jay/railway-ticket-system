@@ -13,9 +13,7 @@
       <p><strong>Passenger:</strong> <span th:text="${user.fullName}"></span> (<span th:text="${user.nic}"></span>)</p>
       <p><strong>Journey Date:</strong> <span th:text="${journeyDate}"></span></p>
 
-      <!-- Train and seat details would be fetched in controller and added to model in real code -->
-
-      <form th:action="@{/book}" method="post">
+      <form th:action="@{/payment/mock}" method="get">
         <input type="hidden" name="trainId" th:value="${trainId}">
         <input type="hidden" name="seatClassId" th:value="${seatClassId}">
         <input type="hidden" name="journeyDate" th:value="${journeyDate}">

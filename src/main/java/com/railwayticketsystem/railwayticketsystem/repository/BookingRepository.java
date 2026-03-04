@@ -1,6 +1,7 @@
 package com.railwayticketsystem.railwayticketsystem.repository;
 
 import com.railwayticketsystem.railwayticketsystem.entity.Booking;
+import com.railwayticketsystem.railwayticketsystem.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,6 +23,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     Optional<Booking> findByTransactionId(String transactionId);
 
+
+    List<Booking> findTop5ByUserOrderByBookingTimeDesc(User user);
+
     /**
      * Admin Reports & Dashboard
      */
@@ -29,7 +33,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findTop10ByOrderByBookingTimeDesc();
 
+
     // Optional: revenue calculation (uncomment when you add price to Booking or join)
     // @Query("SELECT SUM(sc.price) FROM Booking b JOIN b.seatClass sc WHERE b.bookingTime BETWEEN :start AND :end")
     // BigDecimal calculateRevenue(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
+
