@@ -27,11 +27,8 @@ public class SearchController {
     @GetMapping("/search")
     public String showSearchPage(Model model) {
         List<Station> stations = stationService.getAllStations();
-        if (stations.isEmpty()) {
-            model.addAttribute("error", "No stations available. Please add stations via admin panel.");
-            return "search";
-        }
 
+        // Thymeleaf error එක වළක්වා ගැනීමට SearchRequest object එක හැමවිටම model එකට add කිරීම
         SearchRequest searchRequest = new SearchRequest();
         searchRequest.setJourneyDate(LocalDate.now().plusDays(1)); // default = tomorrow
 
@@ -39,6 +36,11 @@ public class SearchController {
         model.addAttribute("stations", stations);
         model.addAttribute("minDate", LocalDate.now().plusDays(1).toString());
         model.addAttribute("maxDate", LocalDate.now().plusDays(60).toString());
+
+        // Stations Database එකේ නැතිනම් පමණක් Error message එකක් පෙන්වීම
+        if (stations.isEmpty()) {
+            model.addAttribute("error", "No stations available. Please add stations via admin panel.");
+        }
 
         return "search";
     }

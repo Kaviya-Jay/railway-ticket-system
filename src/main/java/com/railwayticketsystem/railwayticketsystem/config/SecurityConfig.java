@@ -12,7 +12,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -28,37 +27,38 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // 1. PUBLIC ACCESS
-                        .requestMatchers("/", "/index", "/search", "/search/**").permitAll()
-                        .requestMatchers("/login", "/register", "/logout").permitAll()
+                        .requestMatchers("/", "/index", "/search", "/search/**", "/error").permitAll()
+                        .requestMatchers("/login", "/register", "/logout", "/otp-verify").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/tickets/**").permitAll()
 
                         // 2. ROLE-BASED ACCESS
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
                         // 3. AUTHENTICATED ACCESS
-                        .requestMatchers("/booking/**", "/book", "/dashboard").authenticated()
+                        .requestMatchers("/booking/**", "/book", "/dashboard", "/payment/**").authenticated()
 
                         // 4. CATCH-ALL
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .defaultSuccessUrl("/dashboard", false) // false මගින් කලින් හිටපු පිටුවටම redirect කරයි
                         .failureUrl("/login?error=true")
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout") // Standard practice to redirect to login
+                        .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
 
-        return http.build(); // This returns the required SecurityFilterChain
+        return http.build();
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> userRepository.findByEmail(username) // Ensure findByEmail exists in UserRepository
+        // මෙතන කලින් තිබුණේ findByEmail - දැන් එය findByNic ලෙස නිවැරදි කර ඇත
+        return username -> userRepository.findByNic(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 

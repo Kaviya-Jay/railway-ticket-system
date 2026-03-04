@@ -16,19 +16,17 @@
     </div>
     <div class="card-body">
 
-      <!-- General Error Message -->
       <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-      <!-- Field-Specific Errors -->
-      <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
-        <ul>
-          <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
-        </ul>
-      </div>
-
       <form th:action="@{/search}" th:object="${searchRequest}" method="post">
+
+        <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+          <ul>
+            <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+          </ul>
+        </div>
+
         <div class="row g-3">
-          <!-- From Station -->
           <div class="col-md-4">
             <label class="form-label">From Station</label>
             <select th:field="*{startStationId}" class="form-select" required>
@@ -40,7 +38,6 @@
             <div th:if="${#fields.hasErrors('startStationId')}" class="text-danger" th:errors="*{startStationId}"></div>
           </div>
 
-          <!-- To Station -->
           <div class="col-md-4">
             <label class="form-label">To Station</label>
             <select th:field="*{endStationId}" class="form-select" required>
@@ -52,7 +49,6 @@
             <div th:if="${#fields.hasErrors('endStationId')}" class="text-danger" th:errors="*{endStationId}"></div>
           </div>
 
-          <!-- Journey Date -->
           <div class="col-md-4">
             <label class="form-label">Journey Date</label>
             <input type="date"

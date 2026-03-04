@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Search Results - Railway System</title>
@@ -35,7 +35,6 @@
                             <p><strong>Date:</strong> <span th:text="${journeyDate}"></span></p>
                         </div>
 
-                        <!-- Seat Classes -->
                         <div class="col-md-4">
                             <div th:each="seatClass : ${train.seatClasses}" class="mb-3 border p-3 rounded">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -45,23 +44,12 @@
                                         <small class="text-success" th:text="${seatClass.availableSeats} + ' seats left'"></small>
                                     </div>
 
-                                    <!-- Login to Book for Guests -->
-                                    <sec:authorize access="isAnonymous()">
-                                        <a href="/login?loginRequired=true"
-                                           class="btn btn-outline-primary btn-sm">
-                                            Login to Book
-                                        </a>
-                                    </sec:authorize>
-
-                                    <!-- Book Now for Logged-in -->
-                                    <sec:authorize access="isAuthenticated()">
-                                        <a th:href="@{/booking/confirm(trainId=${train.id},
+                                    <a th:href="@{/booking/confirm(trainId=${train.id},
                                                                    seatClassId=${seatClass.id},
                                                                    journeyDate=${journeyDate})}"
-                                           class="btn btn-success btn-sm">
-                                            Book Now
-                                        </a>
-                                    </sec:authorize>
+                                       class="btn btn-success btn-sm">
+                                        Book Now
+                                    </a>
                                 </div>
                             </div>
                         </div>
