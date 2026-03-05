@@ -1,17 +1,26 @@
 package com.railwayticketsystem.railwayticketsystem.config;
 
 import com.railwayticketsystem.railwayticketsystem.repository.UserRepository;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
+
+import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity
@@ -27,7 +36,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // 1. PUBLIC ACCESS
-                        .requestMatchers("/", "/index", "/search", "/search/**", "/error").permitAll()
+                        .requestMatchers("/", "/index", "/about" , "/search", "/search/**", "/error").permitAll()
                         .requestMatchers("/login", "/register", "/logout", "/otp-verify").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/tickets/**").permitAll()
 
@@ -35,14 +44,14 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
                         // 3. AUTHENTICATED ACCESS
-                        .requestMatchers("/booking/**", "/book", "/dashboard", "/payment/**").authenticated()
+                        .requestMatchers("/booking/**", "/book", "/dashboard", "/profile/**", "/payment/**").authenticated()
 
                         // 4. CATCH-ALL
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", false) // false මගින් කලින් හිටපු පිටුවටම redirect කරයි
+                        .successHandler(customSuccessHandler())
                         .failureUrl("/login?error=true")
                         .permitAll()
                 )
@@ -57,13 +66,39 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        // මෙතන කලින් තිබුණේ findByEmail - දැන් එය findByNic ලෙස නිවැරදි කර ඇත
+        // අලුත් වෙනස: .or() මගින් NIC එකෙන් සොයා ගැනීමට නොහැකි නම් Email එකෙන් සොයා බලයි
         return username -> userRepository.findByNic(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+                .or(() -> userRepository.findByEmail(username))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with NIC or Email: " + username));
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler customSuccessHandler() {
+        return new AuthenticationSuccessHandler() {
+            @Override
+            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                                Authentication authentication) throws IOException, ServletException {
+
+                SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);
+                if (savedRequest != null) {
+                    response.sendRedirect(savedRequest.getRedirectUrl());
+                    return;
+                }
+
+                boolean isAdmin = authentication.getAuthorities().stream()
+                        .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+
+                if (isAdmin) {
+                    response.sendRedirect("/admin/dashboard");
+                } else {
+                    response.sendRedirect("/dashboard");
+                }
+            }
+        };
     }
 }

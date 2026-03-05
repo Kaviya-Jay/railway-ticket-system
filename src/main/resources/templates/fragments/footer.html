@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<footer th:fragment="footer" class="bg-dark text-light py-5 mt-auto">
+    <div class="container">
+        <div class="row">
+
+            <div class="col-md-4 mb-4">
+                <h5 class="text-uppercase fw-bold text-white mb-3">🚂 Railway System</h5>
+                <p class="text-white-50 small pe-3">
+                    Your trusted platform for booking train tickets across Sri Lanka. Fast, secure, and reliable online reservations for a comfortable journey.
+                </p>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <h5 class="text-uppercase fw-bold text-white mb-3">Quick Links</h5>
+                <ul class="list-unstyled lh-lg small">
+                    <li><a href="/" class="text-white-50 text-decoration-none nav-link-hover">Home</a></li>
+                    <li><a href="/search" class="text-white-50 text-decoration-none nav-link-hover">Search Trains</a></li>
+                    <li><a href="/login" class="text-white-50 text-decoration-none nav-link-hover">User Login</a></li>
+                    <li><a href="/admin/dashboard" class="text-white-50 text-decoration-none nav-link-hover">Admin Panel</a></li>
+                </ul>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <h5 class="text-uppercase fw-bold text-white mb-3">Contact Us</h5>
+                <ul class="list-unstyled text-white-50 small lh-lg">
+                    <li>📍 Sri Lanka Railways, Colombo 10</li>
+                    <li>📞 +94 11 243 2908</li>
+                    <li>✉️ support@railwaytickets.lk</li>
+                </ul>
+            </div>
+
+        </div>
+
+        <hr class="border-secondary mt-2 mb-4">
+
+        <div class="row align-items-center">
+            <div class="col-md-6 text-center text-md-start text-white-50 small mb-2 mb-md-0">
+                &copy; <span th:text="${#dates.year(#dates.createNow())}"></span> Railway Ticket Booking System. All Rights Reserved.
+            </div>
+            <div class="col-md-6 text-center text-md-end text-white-50 small">
+                Designed for BSc Software Engineering Project
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    /* Footer links hover effect */
+    .nav-link-hover:hover {
+        color: #0d6efd !important; /* Bootstrap primary color */
+        padding-left: 5px;
+        transition: all 0.3s ease;
+    }
+</style>
+</body>
+</html>
