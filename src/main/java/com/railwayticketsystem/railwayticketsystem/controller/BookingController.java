@@ -24,40 +24,41 @@ public class BookingController {
     private final BookingService bookingService;
     private final PaymentService paymentService;
 
-    // Step 1: Show booking confirmation page with selected train & class
     @GetMapping("/booking/confirm")
     public String showBookingConfirm(
             @RequestParam Long trainId,
             @RequestParam Long seatClassId,
             @RequestParam LocalDate journeyDate,
+            @RequestParam(defaultValue = "1") int quantity,
             @AuthenticationPrincipal User currentUser,
             Model model) {
 
         model.addAttribute("trainId", trainId);
         model.addAttribute("seatClassId", seatClassId);
         model.addAttribute("journeyDate", journeyDate);
+        model.addAttribute("quantity", quantity);
         model.addAttribute("user", currentUser);
 
         return "booking-confirm";
     }
 
-    // Step 2: Proceed to Mock Payment
     @GetMapping("/payment/mock")
     public String showPaymentMock(
             @RequestParam Long trainId,
             @RequestParam Long seatClassId,
             @RequestParam LocalDate journeyDate,
+            @RequestParam int quantity,
             Model model) {
 
         model.addAttribute("paymentRequest", new PaymentRequest());
         model.addAttribute("trainId", trainId);
         model.addAttribute("seatClassId", seatClassId);
         model.addAttribute("journeyDate", journeyDate);
+        model.addAttribute("quantity", quantity);
 
         return "payment-mock";
     }
 
-    // Step 3: Process Mock Payment & Book
     @PostMapping("/payment/process")
     public String processPayment(@ModelAttribute PaymentRequest paymentReq,
                                  @AuthenticationPrincipal User currentUser,
@@ -68,6 +69,7 @@ public class BookingController {
             bookingReq.setTrainId(paymentReq.getTrainId());
             bookingReq.setSeatClassId(paymentReq.getSeatClassId());
             bookingReq.setJourneyDate(paymentReq.getJourneyDate());
+            bookingReq.setQuantity(paymentReq.getQuantity());
 
             try {
                 Booking booking = bookingService.bookTicket(bookingReq, currentUser.getNic());
@@ -82,11 +84,10 @@ public class BookingController {
             }
         } else {
             redirectAttributes.addFlashAttribute("error", "Mock payment failed. Please try again.");
-            return "redirect:/payment/mock?trainId=" + paymentReq.getTrainId() + "&seatClassId=" + paymentReq.getSeatClassId() + "&journeyDate=" + paymentReq.getJourneyDate();
+            return "redirect:/payment/mock?trainId=" + paymentReq.getTrainId() + "&seatClassId=" + paymentReq.getSeatClassId() + "&journeyDate=" + paymentReq.getJourneyDate() + "&quantity=" + paymentReq.getQuantity();
         }
     }
 
-    // Step 4: Booking Success Page with Download links
     @GetMapping("/booking/success/{transactionId}")
     public String bookingSuccess(@PathVariable String transactionId,
                                  Model model) {
@@ -94,10 +95,9 @@ public class BookingController {
         return "booking-success";
     }
 
-    // Download PDF Ticket
     @GetMapping("/download/pdf/{transactionId}")
     public String downloadTicket(@PathVariable String transactionId, Model model) {
         model.addAttribute("pdfPath", "/tickets/TICKET-" + transactionId + ".pdf");
-        return "redirect:/booking/success/" + transactionId; // or serve file via Resource
+        return "redirect:/booking/success/" + transactionId;
     }
 }

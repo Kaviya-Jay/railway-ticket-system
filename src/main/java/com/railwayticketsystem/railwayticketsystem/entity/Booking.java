@@ -40,9 +40,12 @@ public class Booking {
     @Column(nullable = false)
     private LocalDate journeyDate;
 
+    @Column(nullable = false)
+    private int quantity = 1;
+
     @Column(nullable = false, length = 20)
     private String status = "CONFIRMED";
 
     @Column(length = 255)
-    private String pdfPath;   // path to generated PDF ticket
+    private String pdfPath;
 }

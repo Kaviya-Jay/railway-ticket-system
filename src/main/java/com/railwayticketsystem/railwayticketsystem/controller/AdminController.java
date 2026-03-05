@@ -1,12 +1,7 @@
 package com.railwayticketsystem.railwayticketsystem.controller;
 
-import com.railwayticketsystem.railwayticketsystem.entity.Booking;
-import com.railwayticketsystem.railwayticketsystem.entity.SeatClass;
-import com.railwayticketsystem.railwayticketsystem.entity.Station;
-import com.railwayticketsystem.railwayticketsystem.entity.Train;
-import com.railwayticketsystem.railwayticketsystem.repository.BookingRepository;
-import com.railwayticketsystem.railwayticketsystem.repository.SeatClassRepository;
-import com.railwayticketsystem.railwayticketsystem.repository.TrainRepository;
+import com.railwayticketsystem.railwayticketsystem.entity.*;
+import com.railwayticketsystem.railwayticketsystem.repository.*;
 import com.railwayticketsystem.railwayticketsystem.service.StationService;
 import com.railwayticketsystem.railwayticketsystem.service.TrainService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +12,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -27,14 +21,15 @@ public class AdminController {
 
     private final StationService stationService;
     private final TrainService trainService;
-    private final TrainRepository trainRepository;          // for findById
+    private final TrainRepository trainRepository;
     private final SeatClassRepository seatClassRepository;
     private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
+    private final SystemSettingRepository systemSettingRepository;
 
     // ====================== DASHBOARD ======================
     @GetMapping("/dashboard")
     public String adminDashboard(Model model) {
-        // Quick stats
         long totalBookings = bookingRepository.count();
         long todayBookings = bookingRepository.countByBookingTimeAfter(LocalDateTime.now().minusDays(1));
 
@@ -93,7 +88,7 @@ public class AdminController {
     @GetMapping("/trains/new")
     public String newTrainForm(Model model) {
         model.addAttribute("train", new Train());
-        model.addAttribute("stations", stationService.getAllStations()); // for dropdown
+        model.addAttribute("stations", stationService.getAllStations());
         return "admin/train-form";
     }
 
@@ -122,52 +117,91 @@ public class AdminController {
         return "redirect:/admin/trains";
     }
 
-    // ====================== SEAT CLASSES MANAGEMENT (Update Availability) ======================
+    // ====================== SEAT CLASSES MANAGEMENT ======================
     @GetMapping("/trains/{trainId}/seats")
     public String manageSeatClasses(@PathVariable Long trainId, Model model) {
         Optional<Train> trainOpt = trainRepository.findById(trainId);
-        if (trainOpt.isEmpty()) {
-            throw new RuntimeException("Train not found");
-        }
-        List<SeatClass> seatClasses = seatClassRepository.findByTrainId(trainId);
+        if (trainOpt.isEmpty()) throw new RuntimeException("Train not found");
 
         model.addAttribute("train", trainOpt.get());
-        model.addAttribute("seatClasses", seatClasses);
+        model.addAttribute("seatClasses", seatClassRepository.findByTrainId(trainId));
         return "admin/seat-classes";
     }
 
+    // යාවත්කාලීන කරන ලද Seat Update මෙතඩ් එක
     @PostMapping("/seats/update/{seatClassId}")
     public String updateSeatAvailability(
             @PathVariable Long seatClassId,
+            @RequestParam BigDecimal price,
+            @RequestParam int totalSeats,
             @RequestParam int availableSeats,
             RedirectAttributes redirectAttributes) {
 
         SeatClass seatClass = seatClassRepository.findById(seatClassId)
                 .orElseThrow(() -> new RuntimeException("Seat class not found"));
 
+        seatClass.setPrice(price);
+        seatClass.setTotalSeats(totalSeats);
         seatClass.setAvailableSeats(availableSeats);
-        seatClassRepository.save(seatClass);
 
-        redirectAttributes.addFlashAttribute("success", "Seat availability updated!");
+        seatClassRepository.save(seatClass);
+        redirectAttributes.addFlashAttribute("success", seatClass.getClassType() + " class details updated successfully!");
         return "redirect:/admin/trains/" + seatClass.getTrain().getId() + "/seats";
+    }
+
+    // ====================== USER & ADMIN MANAGEMENT ======================
+    @GetMapping("/users")
+    public String listUsers(Model model) {
+        model.addAttribute("users", userRepository.findByRole(Role.USER));
+        return "admin/users";
+    }
+
+    @GetMapping("/admins")
+    public String listAdmins(Model model) {
+        model.addAttribute("admins", userRepository.findByRole(Role.ADMIN));
+        return "admin/admins";
+    }
+
+    @GetMapping("/users/make-admin/{id}")
+    public String makeAdmin(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        User user = userRepository.findById(id).orElseThrow();
+        user.setRole(Role.ADMIN);
+        userRepository.save(user);
+        redirectAttributes.addFlashAttribute("success", user.getFullName() + " is now an Admin!");
+        return "redirect:/admin/users";
+    }
+
+    @GetMapping("/users/delete/{id}")
+    public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        userRepository.deleteById(id);
+        redirectAttributes.addFlashAttribute("success", "User deleted successfully!");
+        return "redirect:/admin/users";
+    }
+
+    // ====================== TICKET BOOKING QUOTA ======================
+    @GetMapping("/quota")
+    public String manageQuota(Model model) {
+        SystemSetting quotaSetting = systemSettingRepository.findById("MAX_TICKETS_PER_24H")
+                .orElse(new SystemSetting("MAX_TICKETS_PER_24H", "3"));
+        model.addAttribute("currentQuota", quotaSetting.getValue());
+        return "admin/quota";
+    }
+
+    @PostMapping("/quota")
+    public String updateQuota(@RequestParam String quotaValue, RedirectAttributes redirectAttributes) {
+        SystemSetting setting = new SystemSetting("MAX_TICKETS_PER_24H", quotaValue);
+        systemSettingRepository.save(setting);
+        redirectAttributes.addFlashAttribute("success", "Booking Quota updated to " + quotaValue + " tickets per 24 hours.");
+        return "redirect:/admin/quota";
     }
 
     // ====================== TRANSACTION REPORTS ======================
     @GetMapping("/reports")
     public String viewReports(Model model) {
-        List<Booking> recentBookings = bookingRepository.findTop10ByOrderByBookingTimeDesc();
-
-        long totalBookings = bookingRepository.count();
-        long todayBookings = bookingRepository.countByBookingTimeAfter(LocalDateTime.now().minusDays(1));
-
-        // Simple revenue (you can improve with JPQL sum later)
-        BigDecimal totalRevenue = BigDecimal.ZERO; // Placeholder - enhance if needed
-
-        model.addAttribute("recentBookings", recentBookings);
-        model.addAttribute("totalBookings", totalBookings);
-        model.addAttribute("todayBookings", todayBookings);
-        model.addAttribute("totalRevenue", totalRevenue);
-
+        model.addAttribute("recentBookings", bookingRepository.findTop10ByOrderByBookingTimeDesc());
+        model.addAttribute("totalBookings", bookingRepository.count());
+        model.addAttribute("todayBookings", bookingRepository.countByBookingTimeAfter(LocalDateTime.now().minusDays(1)));
+        model.addAttribute("totalRevenue", BigDecimal.ZERO);
         return "admin/reports";
     }
 }

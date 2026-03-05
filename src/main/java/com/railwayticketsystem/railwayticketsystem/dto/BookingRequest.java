@@ -12,4 +12,6 @@ public class BookingRequest {
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate journeyDate;
+
+    private int quantity;
 }
