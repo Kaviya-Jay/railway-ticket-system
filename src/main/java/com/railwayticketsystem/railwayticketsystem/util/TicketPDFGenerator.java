@@ -1,88 +1,93 @@
 package com.railwayticketsystem.railwayticketsystem.util;
 
-import com.lowagie.text.*;
-import com.lowagie.text.pdf.PdfWriter;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfWriter;
+
 import com.railwayticketsystem.railwayticketsystem.entity.Booking;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.format.DateTimeFormatter;
+import java.math.BigDecimal;
 
 @Component
 public class TicketPDFGenerator {
 
-    private static final String TICKETS_DIR = "./tickets/";
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy");
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    public String generateTicketPDF(Booking booking, String qrPath) throws Exception {
+        // PDF එක සේව් කළ යුතු ෆෝල්ඩරයේ මාර්ගය
+        String directoryPath = "src/main/resources/static/tickets";
 
-    public String generateTicketPDF(Booking booking, String qrImagePath) throws Exception {
-        String fileName = "TICKET-" + booking.getTransactionId() + ".pdf";
-        Path pdfPath = Paths.get(TICKETS_DIR + fileName);
+        // අදාල ෆෝල්ඩරය නොමැති නම් එය ස්වයංක්‍රීයව නිර්මාණය කිරීම
+        File directory = new File(directoryPath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
 
-        // Create directory if not exists
-        Files.createDirectories(pdfPath.getParent());
-
-        Document document = new Document(PageSize.A4);
-        PdfWriter.getInstance(document, new FileOutputStream(pdfPath.toFile()));
+        String pdfPath = directoryPath + "/TICKET-" + booking.getTransactionId() + ".pdf";
+        Document document = new Document();
+        PdfWriter.getInstance(document, new FileOutputStream(pdfPath));
         document.open();
 
-        // ====================== HEADER ======================
-        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 24);
-        Paragraph title = new Paragraph("RAILWAY TICKET", titleFont);
+        // Title
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, BaseColor.DARK_GRAY);
+        Paragraph title = new Paragraph("Sri Lanka Railways - E-Ticket", titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         document.add(title);
+        document.add(new Paragraph(" ")); // හිස් පේළියක්
+        document.add(new Paragraph("-------------------------------------------------------------------------------------------"));
 
-        Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
-        Paragraph subtitle = new Paragraph("Sri Lanka Railways - Confirmed Ticket", subtitleFont);
-        subtitle.setAlignment(Element.ALIGN_CENTER);
-        document.add(subtitle);
-        document.add(Chunk.NEWLINE);
-
-        // ====================== PASSENGER DETAILS ======================
+        // Booking Details
         Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
         Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
 
-        document.add(new Paragraph("Passenger Name : " + booking.getUser().getFullName(), boldFont));
-        document.add(new Paragraph("NIC            : " + booking.getUser().getNic(), normalFont));
-        document.add(new Paragraph("Mobile         : " + booking.getUser().getMobile(), normalFont));
-        document.add(Chunk.NEWLINE);
+        document.add(new Paragraph("Transaction ID: " + booking.getTransactionId(), normalFont));
+        document.add(new Paragraph("Passenger Name: " + booking.getUser().getFullName(), normalFont));
+        document.add(new Paragraph("NIC: " + booking.getUser().getNic(), normalFont));
+        document.add(new Paragraph("Train: " + booking.getTrain().getTrainName(), boldFont));
+        document.add(new Paragraph("Route: " + booking.getTrain().getStartStation().getStationName() + " to " + booking.getTrain().getEndStation().getStationName(), normalFont));
+        document.add(new Paragraph("Journey Date: " + booking.getJourneyDate().toString(), normalFont));
+        document.add(new Paragraph("Class Type: " + booking.getSeatClass().getClassType(), normalFont));
 
-        // ====================== JOURNEY DETAILS ======================
-        document.add(new Paragraph("Journey Details", boldFont));
-        document.add(new Paragraph("From           : " + booking.getTrain().getStartStation().getStationName(), normalFont));
-        document.add(new Paragraph("To             : " + booking.getTrain().getEndStation().getStationName(), normalFont));
-        document.add(new Paragraph("Date           : " + booking.getJourneyDate().format(DATE_FORMAT), normalFont));
-        document.add(new Paragraph("Departure      : " + booking.getTrain().getDepartureTime(), normalFont));
-        document.add(new Paragraph("Arrival        : " + booking.getTrain().getArrivalTime(), normalFont));
-        document.add(new Paragraph("Class          : " + booking.getSeatClass().getClassType() + " Class", normalFont));
-        document.add(new Paragraph("Price          : Rs. " + booking.getSeatClass().getPrice(), normalFont));
-        document.add(Chunk.NEWLINE);
+        document.add(new Paragraph("-------------------------------------------------------------------------------------------"));
 
-        // ====================== TRANSACTION INFO ======================
-        document.add(new Paragraph("Transaction ID : " + booking.getTransactionId(), boldFont));
-        document.add(new Paragraph("Booking Time   : " + booking.getBookingTime().format(DATE_FORMAT) + " "
-                + booking.getBookingTime().toLocalTime().format(TIME_FORMAT), normalFont));
-        document.add(Chunk.NEWLINE);
+        // Price Calculation
+        BigDecimal unitPrice = booking.getSeatClass().getPrice();
+        int quantity = booking.getQuantity();
+        BigDecimal totalPrice = unitPrice.multiply(new BigDecimal(quantity));
 
-        // ====================== QR CODE ======================
-        document.add(new Paragraph("Scan QR Code for Verification", boldFont));
-        Image qrImage = Image.getInstance(qrImagePath);
-        qrImage.scaleToFit(180, 180);
-        qrImage.setAlignment(Element.ALIGN_CENTER);
-        document.add(qrImage);
+        document.add(new Paragraph("Unit Price: Rs. " + unitPrice, normalFont));
+        document.add(new Paragraph("Tickets (Quantity): " + quantity + " Seats", normalFont));
 
-        // ====================== FOOTER ======================
-        document.add(Chunk.NEWLINE);
-        Paragraph footer = new Paragraph("Thank you for travelling with Sri Lanka Railways | This is a computer generated ticket",
-                FontFactory.getFont(FontFactory.HELVETICA, 10));
+        Font priceFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.RED);
+        document.add(new Paragraph("Total Paid Amount: Rs. " + totalPrice, priceFont));
+
+        document.add(new Paragraph("-------------------------------------------------------------------------------------------"));
+        document.add(new Paragraph(" "));
+
+        // QR Code එක ඇතුලත් කිරීම
+        if (qrPath != null && !qrPath.isEmpty()) {
+            try {
+                Image qrImage = Image.getInstance(qrPath);
+                qrImage.scaleAbsolute(120, 120);
+                qrImage.setAlignment(Element.ALIGN_CENTER);
+                document.add(qrImage);
+            } catch (Exception e) {
+                System.out.println("Could not load QR Code image for PDF");
+            }
+        }
+
+        document.add(new Paragraph(" "));
+        Paragraph footer = new Paragraph("Thank you for traveling with Sri Lanka Railways. Have a safe journey!", FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 10));
         footer.setAlignment(Element.ALIGN_CENTER);
         document.add(footer);
 
         document.close();
-
-        return pdfPath.toAbsolutePath().toString();
+        return pdfPath;
     }
 }

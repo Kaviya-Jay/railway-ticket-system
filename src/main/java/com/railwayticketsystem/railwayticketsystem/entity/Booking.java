@@ -48,4 +48,10 @@ public class Booking {
 
     @Column(length = 255)
     private String pdfPath;
+
+    @Column(length = 100)
+    private String payherePaymentId;
+
+    @Column(length = 50)
+    private String paymentMethod;
 }

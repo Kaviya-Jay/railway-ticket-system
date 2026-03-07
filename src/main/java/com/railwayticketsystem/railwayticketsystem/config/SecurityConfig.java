@@ -35,16 +35,18 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // 1. PUBLIC ACCESS
-                        .requestMatchers("/", "/index", "/about" , "/search", "/search/**", "/error").permitAll()
+                        // 1. PUBLIC ACCESS (PDF සහ Success පිටුව සඳහා අවසර ලබා දී ඇත)
+                        .requestMatchers("/", "/index", "/about", "/search", "/search/**", "/error").permitAll()
                         .requestMatchers("/login", "/register", "/logout", "/otp-verify").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/tickets/**").permitAll()
+                        .requestMatchers("/payhere/notify", "/payment/return", "/payment/cancel").permitAll()
+                        .requestMatchers("/download/pdf/**", "/booking/success/**").permitAll() // අලුත් වෙනස
 
                         // 2. ROLE-BASED ACCESS
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
                         // 3. AUTHENTICATED ACCESS
-                        .requestMatchers("/booking/**", "/book", "/dashboard", "/profile/**", "/payment/**").authenticated()
+                        .requestMatchers("/booking/**", "/book", "/dashboard", "/profile/**").authenticated()
 
                         // 4. CATCH-ALL
                         .anyRequest().authenticated()
@@ -66,7 +68,6 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        // අලුත් වෙනස: .or() මගින් NIC එකෙන් සොයා ගැනීමට නොහැකි නම් Email එකෙන් සොයා බලයි
         return username -> userRepository.findByNic(username)
                 .or(() -> userRepository.findByEmail(username))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with NIC or Email: " + username));

@@ -10,12 +10,21 @@
     --dark: #212529;
 }
 
+
 /* Global Styles */
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background-color: #f8f9fa;
     color: #333;
     line-height: 1.6;
+}
+
+body:not(.home-page) {
+    background-image: linear-gradient(rgba(244, 246, 249, 0.88), rgba(244, 246, 249, 0.50)), url('/images/bg2.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    background-repeat: no-repeat !important;
 }
 
 .container {
