@@ -1,0 +1,81 @@
+
+    /* --- Carousel Hero Section Styles --- */
+.carousel-section {
+    position: relative;
+}
+
+.hero-carousel-img {
+    height: 70vh;
+    min-height: 500px;
+    object-fit: cover;
+    filter: brightness(0.5);
+}
+
+.static-carousel-caption {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 10;
+    text-align: center;
+    color: white;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+    font-weight: 300;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+}
+
+/* --- Destination Cards Styles (Images Section) --- */
+.destination-card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    background-color: #fff;
+}
+
+.destination-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.destination-img {
+    height: 220px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.destination-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    padding: 20px;
+    color: white;
+}
+
+/* --- Info Section Styles --- */
+.info-section {
+    background-color: #f8f9fa;
+    padding: 60px 0;
+    margin-top: 40px;
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    color: #0d6efd;
+    margin-bottom: 15px;
+}

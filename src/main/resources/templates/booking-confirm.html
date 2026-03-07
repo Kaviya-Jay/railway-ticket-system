@@ -14,13 +14,13 @@
             <p><strong>Journey Date:</strong> <span th:text="${journeyDate}"></span></p>
             <p><strong>Tickets (Quantity):</strong> <span th:text="${quantity}"></span> Seats</p>
 
-            <form th:action="@{/payment/mock}" method="get">
+            <form th:action="@{/payment/checkout}" method="post">
                 <input type="hidden" name="trainId" th:value="${trainId}">
                 <input type="hidden" name="seatClassId" th:value="${seatClassId}">
                 <input type="hidden" name="journeyDate" th:value="${journeyDate}">
                 <input type="hidden" name="quantity" th:value="${quantity}">
 
-                <button type="submit" class="btn btn-warning btn-lg mt-3">Proceed to Mock Payment →</button>
+                <button type="submit" class="btn btn-primary btn-lg mt-3 fw-bold">Proceed to Secure Payment ➔</button>
             </form>
         </div>
     </div>

@@ -13,20 +13,24 @@ import java.util.List;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    // --- Admin Dashboard සහ Reports සඳහා අවශ්‍ය Methods ---
-    long countByBookingTimeAfter(LocalDateTime time);
+    // UserController එකට අවශ්‍ය වූ මෙතඩ් 1 (පරිශීලකයාගේ මුළු ටිකට් ගණන ලබා ගැනීම)
+    @Query("SELECT COALESCE(SUM(b.quantity), 0) FROM Booking b WHERE b.user.id = :userId")
+    Long countTotalTicketsBooked(@Param("userId") Long userId);
 
-    List<Booking> findTop10ByOrderByBookingTimeDesc();
+    // UserController එකට අවශ්‍ය වූ මෙතඩ් 2 (පරිශීලකයා වියදම් කළ මුළු මුදල ලබා ගැනීම)
+    @Query("SELECT COALESCE(SUM(b.quantity * b.seatClass.price), 0) FROM Booking b WHERE b.user.id = :userId")
+    BigDecimal calculateTotalSpent(@Param("userId") Long userId);
 
-    // --- User Dashboard සඳහා අවශ්‍ය Methods ---
+    // යම් User කෙනෙකුගේ සියලුම Bookings ලබාගැනීමට
     List<Booking> findByUserIdOrderByBookingTimeDesc(Long userId);
 
-    @Query("SELECT COALESCE(SUM(b.quantity), 0) FROM Booking b WHERE b.user.id = :userId AND b.bookingTime >= :time")
-    long countBookingsInLast24Hours(@Param("userId") Long userId, @Param("time") LocalDateTime time);
+    // පැය 24 ඇතුළත සිදුකර ඇති Bookings ගණන ලබාගැනීමේ අලුත් Query එක (Quota එක සඳහා)
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.user.id = :userId AND b.bookingTime >= :since")
+    long countBookingsInLast24Hours(@Param("userId") Long userId, @Param("since") LocalDateTime since);
 
-    @Query("SELECT COALESCE(SUM(b.quantity), 0) FROM Booking b WHERE b.user.id = :userId")
-    long countTotalTicketsBooked(@Param("userId") Long userId);
+    // Admin Dashboard එකේ අද දවසේ Bookings ගණන පෙන්වීමට
+    long countByBookingTimeAfter(LocalDateTime date);
 
-    @Query("SELECT COALESCE(SUM(b.quantity * s.price), 0) FROM Booking b JOIN b.seatClass s WHERE b.user.id = :userId")
-    BigDecimal calculateTotalSpent(@Param("userId") Long userId);
+    // Admin Dashboard එකේ අවසන් Bookings 10 පෙන්වීමට
+    List<Booking> findTop10ByOrderByBookingTimeDesc();
 }
