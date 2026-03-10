@@ -20,10 +20,8 @@ import java.math.BigDecimal;
 public class TicketPDFGenerator {
 
     public String generateTicketPDF(Booking booking, String qrPath) throws Exception {
-        // PDF එක සේව් කළ යුතු ෆෝල්ඩරයේ මාර්ගය
         String directoryPath = "src/main/resources/static/tickets";
 
-        // අදාල ෆෝල්ඩරය නොමැති නම් එය ස්වයංක්‍රීයව නිර්මාණය කිරීම
         File directory = new File(directoryPath);
         if (!directory.exists()) {
             directory.mkdirs();

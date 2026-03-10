@@ -38,7 +38,6 @@ public class BookingController {
     private final String MERCHANT_ID = "1234323";
     private final String MERCHANT_SECRET = "MzczMTAwNjAwOTEzMjQxMDY0ODU3NDg5Njc5MTcxNzE2MTA3MTUx";
 
-    // ඔබේ Ngrok URL එක මෙතනට ලබා දෙන්න
     private final String NGROK_BASE_URL = "https://autarkic-jaqueline-sprawly.ngrok-free.dev";
 
     @GetMapping("/booking/confirm")
