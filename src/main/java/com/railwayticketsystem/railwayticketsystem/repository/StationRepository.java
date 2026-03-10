@@ -7,5 +7,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface StationRepository extends JpaRepository<Station, Long> {
 
-    // You can add custom queries if needed later
 }
